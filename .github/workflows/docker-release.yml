@@ -10,7 +10,7 @@ jobs:
   build-and-release:
     runs-on: ubuntu-latest
     env:
-      VS_TYPE: ${{ github.ref_name }}
+      RAW_BRANCH: ${{ github.ref_name }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -18,28 +18,26 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Extract VS_VERSION from tag
-        id: get_version
+      - name: Extract vs_type and vs_version from Dockerfile
+        id: extract_args
         run: |
-          echo "version=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
-
-      - name: Sanitize branch name
-        id: sanitize_branch
-        run: |
-          echo "branch=$(echo ${{ env.VS_TYPE }} | sed 's/[\/]/-/g')" >> $GITHUB_OUTPUT
+          vs_type=$(grep -E '^ARG vs_type=' Dockerfile | head -n1 | cut -d'=' -f2)
+          vs_version=$(grep -E '^ARG vs_version=' Dockerfile | head -n1 | cut -d'=' -f2)
+          echo "vs_type=$vs_type" >> $GITHUB_OUTPUT
+          echo "vs_version=$vs_version" >> $GITHUB_OUTPUT
 
       - name: Build Docker image
         run: |
-          docker build -t vintagestory:${{ steps.get_version.outputs.version }}-${{ steps.sanitize_branch.outputs.branch }} -f Dockerfile .
+          docker build --build-arg vs_type=${{ steps.extract_args.outputs.vs_type }} --build-arg vs_version=${{ steps.extract_args.outputs.vs_version }} -t vintagestory:${{ steps.extract_args.outputs.vs_version }}-${{ steps.extract_args.outputs.vs_type }} -f Dockerfile .
 
       - name: Save Docker image as tar
         run: |
-          docker save vintagestory:${{ steps.get_version.outputs.version }}-${{ steps.sanitize_branch.outputs.branch }} | gzip > vintagestory-${{ steps.get_version.outputs.version }}-${{ steps.sanitize_branch.outputs.branch }}.tar.gz
+          docker save vintagestory:${{ steps.extract_args.outputs.vs_version }}-${{ steps.extract_args.outputs.vs_type }} | gzip > vintagestory-${{ steps.extract_args.outputs.vs_version }}-${{ steps.extract_args.outputs.vs_type }}.tar.gz
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: vintagestory-${{ steps.get_version.outputs.version }}-${{ steps.sanitize_branch.outputs.branch }}.tar.gz
-          name: ${{ steps.get_version.outputs.version }}
+          files: vintagestory-${{ steps.extract_args.outputs.vs_version }}-${{ steps.extract_args.outputs.vs_type }}.tar.gz
+          name: ${{ steps.extract_args.outputs.vs_version }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
