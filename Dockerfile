@@ -20,6 +20,7 @@ WORKDIR /game
 # Defaults
 ENV VS_DATA_PATH=/gamedata/vs
 COPY --from=downloader "./download/" "/game"
+COPY replacements/ /game/
 
 #  Expose ports
 EXPOSE 42420
