@@ -23,18 +23,23 @@ jobs:
         run: |
           echo "version=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
 
+      - name: Sanitize branch name
+        id: sanitize_branch
+        run: |
+          echo "branch=$(echo ${{ env.VS_TYPE }} | sed 's/[\/]/-/g')" >> $GITHUB_OUTPUT
+
       - name: Build Docker image
         run: |
-          docker build -t vintagestory:${{ steps.get_version.outputs.version }} -f Dockerfile .
+          docker build -t vintagestory:${{ steps.get_version.outputs.version }}-${{ steps.sanitize_branch.outputs.branch }} -f Dockerfile .
 
       - name: Save Docker image as tar
         run: |
-          docker save vintagestory:${{ steps.get_version.outputs.version }} | gzip > vintagestory-${{ steps.get_version.outputs.version }}-${{ env.VS_TYPE }}.tar.gz
+          docker save vintagestory:${{ steps.get_version.outputs.version }}-${{ steps.sanitize_branch.outputs.branch }} | gzip > vintagestory-${{ steps.get_version.outputs.version }}-${{ steps.sanitize_branch.outputs.branch }}.tar.gz
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: vintagestory-${{ steps.get_version.outputs.version }}-${{ env.VS_TYPE }}.tar.gz
+          files: vintagestory-${{ steps.get_version.outputs.version }}-${{ steps.sanitize_branch.outputs.branch }}.tar.gz
           name: ${{ steps.get_version.outputs.version }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
