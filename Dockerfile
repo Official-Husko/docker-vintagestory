@@ -3,9 +3,9 @@ FROM debian:latest as downloader
 
 WORKDIR /download
 
-ARG vs_type=stable
+ARG vs_type=unstable
 ARG vs_os=linux-x64
-ARG vs_version=1.20.12
+ARG vs_version=1.21.0-rc.6
 
 RUN apt update
 RUN apt install -y wget
