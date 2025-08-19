@@ -1,6 +1,6 @@
 services:
   vsserver-unstable:
-    image: vintagestory-unstable:latest
+    image: vintagestory:1.21.0-rc.6-unstable
     container_name: vsserver-unstable
     restart: unless-stopped
     volumes:

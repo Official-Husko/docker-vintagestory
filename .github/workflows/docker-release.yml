@@ -39,5 +39,6 @@ jobs:
         with:
           files: vintagestory-${{ steps.extract_args.outputs.vs_version }}-${{ steps.extract_args.outputs.vs_type }}.tar.gz
           name: ${{ steps.extract_args.outputs.vs_version }}
+          tag_name: ${{ steps.extract_args.outputs.vs_version }}-${{ steps.extract_args.outputs.vs_type }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
