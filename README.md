@@ -1,53 +1,64 @@
-# About this image
+<div align="center">
+  <img src="https://media.invisioncic.com/r268468/monthly_2018_02/gamelogo-vintagestory-banner.png.05569bcb37e8009e6c751d354a4dd033.png" alt="Vintage Story Logo" width="200"/>
+</div>
 
-This image can be used to run a dedicated server for [Vintage Story](https://www.vintagestory.at/)
+# 🛠️ Vintage Story Dedicated Server Docker Image
 
-## Run this image with docker run
+Run a dedicated [Vintage Story](https://www.vintagestory.at/) server easily using Docker!
 
-To run this image you can use `docker run -pd 42420:42420 --name VintageStoryServer devidian/vintagestory:latest`, but you may want to use a customized version for your needs so see following instructions.
+---
 
-## Run this image with docker compose
+## 🚀 Quick Start
 
-To run this image with docker compose you can start using the following file:
+### 🐳 Docker Compose Example
 
 ```yaml
 services:
-  vsserver-stable:
-    image: devidian/vintagestory:latest
-    container_name: vsserver
+  vsserver:
+    image: vintagestory:1.21.0-rc.6-unstable
+    container_name: vintagestory-server
     restart: unless-stopped
     volumes:
-      # • your world will be in /appdata/vintagestory/vs by default (/gamedata/vs on the container)
-      # • if you run multiple servers just change the left part
-      # • you could also use docker volumes instead of host path
-      - /appdata/vintagestory:/gamedata
+      - ./gamedata:/gamedata
     ports:
       - 42420:42420
     environment:
       VS_DATA_PATH: /gamedata
 ```
 
-### Using unstable versions
+### 🏃 Docker Run Example
 
-To use unstable versions just replace tag `latest` with `unstable`. See [docker-compose.yml](docker-compose.yml) for all versions.
+```bash
+docker run -d -p 42420:42420 --name vintagestory-server \
+  -v $(pwd)/gamedata:/gamedata \
+  -e VS_DATA_PATH=/gamedata \
+  vintagestory:1.21.0-rc.6-unstable
+```
 
-### Updating container
+---
 
-To update to the latest version call `docker compose pull` first, this will download the newest latest base image. Then execute `docker compose up -d`.
+## 🔄 Updating Your Server
 
-### Copy/Override files
+To update to the latest image:
 
-If you use a host volume, you can just edit files there. First stop the container, then make your changes and start the container again.
+```bash
+docker compose pull
+docker compose up -d
+```
 
-### Running in TrueNAS
+## 📝 Customizing Server Files
 
-If you have any issues with the hoxst volume mount try this yml:
+If you use a host volume, simply edit files in your `gamedata` folder. Stop the container, make your changes, and restart.
+
+## 🖥️ TrueNAS Users
+
+If you have issues with host volume mounts, try this Compose file:
 
 ```yaml
 services:
-  vsserver-stable:
-    image: devidian/vintagestory:latest
-    container_name: vsserver
+  vsserver:
+    image: vintagestory:1.21.0-rc.6-unstable
+    container_name: vintagestory-server
     restart: unless-stopped
     volumes:
       - vsdata:/gamedata
@@ -59,29 +70,25 @@ volumes:
   vsdata:
 ```
 
-After it spins up the container you might have to connect to your container shell, install nano and edit `/gamedata/vs/serverconfig.json` (see First run Info below)
+After starting, you may need to edit `/gamedata/vs/serverconfig.json` inside the container.
 
-If you have trouble to get admin state, just login, logout, edit `/gamedata/vs/Playerdata/playerdata.json` and change your role to admin. 
-Then change the file to readonly with `chmod -w [file]` and restart the container.
+## 🏁 First Run & Whitelist Info
 
-## Troubleshooting / Help / Issues
+On first run, you may not be able to connect due to whitelist defaults. Options:
 
-If you encounter any Problems or want some help feeel free to contact me on Discord (`Devidian#1334`) on my Discord Server (<https://discord.gg/8h3yhUT>) or write an issue at GitHub (<https://github.com/Devidian/docker-vintagestory>)
+### 🚫 Disable Whitelist
 
-## First run Info
+Edit your config:
 
-If you run the server the first time, you will notice that you cant connect to it, because you are not on the whitelist.
-The whitelist defaults to true since 1.20.0 and you have some options:
+```json
+"StartupCommands": "/whitelist off"
+```
 
-### Disable whitelist
+Login, add yourself, then re-enable if desired.
 
-You can disable whitelist on startup by changing `"StartupCommands": null` to `"StartupCommands": "/whitelist off"`, then you can login, add yourself to the whitelist and turn it on again. Dont forget to remove the command if you want to enable whitelist afterwards. The command for adding Players to the whitelist is `/player [playername] whitelist on`
+### 👤 Add Yourself Manually
 
-### Add yourself to the whitelist
-
-Instead you could also add yourself to the whitelist by setting `"StartupCommands": "/whitelist add [playeruid]"` to login and then add other players this way by their uid. Dont ask me where to get your uid. I just know its in the `playerdata.json` as soon as you login.
-
-Another manual solution is to add yourself to the whitelist file `playerswhitelisted.json` that looks like this:
+Add your UID to `playerswhitelisted.json`:
 
 ```json
 [
@@ -90,21 +97,28 @@ Another manual solution is to add yourself to the whitelist file `playerswhiteli
     "PlayerName": "<NAME>",
     "UntilDate": "2075-01-11T16:59:54.4917519+00:00",
     "Reason": null,
-    "IssuedByPlayerName": "Devidian"
+    "IssuedByPlayerName": "Admin"
   }
 ]
 ```
 
-## Other useful commands on startup
+## 💡 Useful Startup Commands
 
-Here a list of commands i usually execute on a new server. Most of them make the game a lot more casual friendly.
+Here are some recommended commands for a more casual server experience:
 
 | Command                                    | Description                                                                         |
 | ------------------------------------------ | ----------------------------------------------------------------------------------- |
-| `/worldconfig toolDurability 2`            | Default is 1 and we feel that is to low for some tools.                             |
-| `/worldconfig microblockChiseling all`     | Default ist stonewood but we like to chisel all                                     |
-| `/worldConfig propickNodeSearchRadius 8`   | Second mode for prospecting, can be 0-12 Blocks                                     |
-| `/worldconfig blockGravity sandgravelsoil` | We like earth falling down                                                          |
-| `/worldconfig deathPunishment keep`        | The game feels to hardcore with the default value drop, especially at the beginning |
-| `/worldconfig temporalStorms veryrare`     | We dont want to set them off but default is to often                                |
-| `/worldconfig temporalRifts off`           | They suck on startup                                                                |
+| `/worldconfig toolDurability 2`            | Increase tool durability.                                                           |
+| `/worldconfig microblockChiseling all`     | Allow chiseling all blocks.                                                         |
+| `/worldConfig propickNodeSearchRadius 8`   | Set prospecting node search radius.                                                 |
+| `/worldconfig blockGravity sandgravelsoil` | Enable gravity for earth blocks.                                                    |
+| `/worldconfig deathPunishment keep`        | Keep items on death for a more casual experience.                                   |
+| `/worldconfig temporalStorms veryrare`     | Make temporal storms very rare.                                                     |
+| `/worldconfig temporalRifts off`           | Disable temporal rifts.                                                             |
+
+---
+
+## ❓ Help & Support
+
+- Discord: [Devidian#1334](https://discord.gg/8h3yhUT)
+- GitHub Issues: [docker-vintagestory](https://github.com/Devidian/docker-vintagestory)
